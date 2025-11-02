@@ -45,6 +45,12 @@ const std::unordered_map<std::string, std::string>& Config::alias_table() {
   {"max_iter", "num_iterations"},
   {"shrinkage_rate", "learning_rate"},
   {"eta", "learning_rate"},
+  {"gradient_max", "gradient_bound"},
+  {"num_leaves_initial", "num_leaves_initial"},
+  {"canarito", "canaritos"},
+  {"qcanaritos", "canaritos"},
+  {"canaries", "canaritos"},
+  {"canary", "canaritos"},
   {"num_leaf", "num_leaves"},
   {"max_leaves", "num_leaves"},
   {"max_leaf", "num_leaves"},
@@ -197,6 +203,9 @@ const std::unordered_set<std::string>& Config::parameter_set() {
   "valid",
   "num_iterations",
   "learning_rate",
+  "gradient_bound",
+  "num_leaves_initial",
+  "canaritos",
   "num_leaves",
   "tree_learner",
   "num_threads",
@@ -345,6 +354,16 @@ void Config::GetMembersFromString(const std::unordered_map<std::string, std::str
 
   GetDouble(params, "learning_rate", &learning_rate);
   CHECK_GT(learning_rate, 0.0);
+
+  GetDouble(params, "gradient_bound", &gradient_bound);
+  CHECK_GE(gradient_bound, 0.0);
+
+  GetInt(params, "num_leaves_initial", &num_leaves_initial);
+  CHECK_GT(num_leaves_initial, 1);
+  CHECK_LE(num_leaves_initial, 131072);
+
+  GetInt(params, "canaritos", &canaritos);
+  CHECK_GE(canaritos, -1);
 
   GetInt(params, "num_leaves", &num_leaves);
   CHECK_GT(num_leaves, 1);
@@ -682,6 +701,9 @@ std::string Config::SaveMembersToString() const {
   str_buf << "[valid: " << Common::Join(valid, ",") << "]\n";
   str_buf << "[num_iterations: " << num_iterations << "]\n";
   str_buf << "[learning_rate: " << learning_rate << "]\n";
+  str_buf << "[gradient_bound: " << gradient_bound << "]\n";
+  str_buf << "[num_leaves_initial: " << num_leaves_initial << "]\n";
+  str_buf << "[canaritos: " << canaritos << "]\n";
   str_buf << "[num_leaves: " << num_leaves << "]\n";
   str_buf << "[num_threads: " << num_threads << "]\n";
   str_buf << "[seed: " << seed << "]\n";
@@ -806,6 +828,9 @@ const std::unordered_map<std::string, std::vector<std::string>>& Config::paramet
     {"valid", {"test", "valid_data", "valid_data_file", "test_data", "test_data_file", "valid_filenames"}},
     {"num_iterations", {"num_iteration", "n_iter", "num_tree", "num_trees", "num_round", "num_rounds", "nrounds", "num_boost_round", "n_estimators", "max_iter"}},
     {"learning_rate", {"shrinkage_rate", "eta"}},
+    {"gradient_bound", {"gradient_max"}},
+    {"num_leaves_initial", {"num_leaves_initial"}},
+    {"canaritos", {"canarito", "qcanaritos", "canaries", "canary"}},
     {"num_leaves", {"num_leaf", "max_leaves", "max_leaf", "max_leaf_nodes"}},
     {"tree_learner", {"tree", "tree_type", "tree_learner_type"}},
     {"num_threads", {"num_thread", "nthread", "nthreads", "n_jobs"}},
@@ -951,6 +976,9 @@ const std::unordered_map<std::string, std::string>& Config::ParameterTypes() {
     {"valid", "vector<string>"},
     {"num_iterations", "int"},
     {"learning_rate", "double"},
+    {"gradient_bound", "double"},
+    {"num_leaves_initial", "int"},
+    {"canaritos", "int"},
     {"num_leaves", "int"},
     {"tree_learner", "string"},
     {"num_threads", "int"},

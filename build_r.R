@@ -413,7 +413,7 @@ version <- gsub(
   )
   , fixed = TRUE
 )
-tarball <- file.path(getwd(), sprintf("lightgbm_%s.tar.gz", version))
+tarball <- file.path(getwd(), sprintf("zlightgbm_%s.tar.gz", version))
 
 install_cmd <- "R"
 install_args <- c("CMD", "INSTALL", "--no-multiarch", "--with-keep.source", tarball)

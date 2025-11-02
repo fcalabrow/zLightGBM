@@ -2,8 +2,8 @@
  * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
  */
-#ifndef LIGHTGBM_INCLUDE_LIGHTGBM_TREE_H_
-#define LIGHTGBM_INCLUDE_LIGHTGBM_TREE_H_
+#ifndef LIGHTGBM_TREE_H_
+#define LIGHTGBM_TREE_H_
 
 #include <LightGBM/dataset.h>
 #include <LightGBM/meta.h>
@@ -186,33 +186,81 @@ class Tree {
   * \param rate The factor of shrinkage
   */
   virtual inline void Shrinkage(double rate) {
+
+    double  rate_new =  rate ;
+    double  score_max= 0 ;
+    double  gradient_bound= 0;
+
+    for (int i = 0; i < num_leaves_; ++i) {
+      if( fabs( leaf_value_[i] ) > score_max )  score_max = fabs( leaf_value_[i] );
+    }
+
+    rate_new = gradient_bound / score_max;
+    if( rate_new > rate || gradient_bound<=0)  rate_new = rate;
+
 #pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static, 1024) if (num_leaves_ >= 2048)
     for (int i = 0; i < num_leaves_ - 1; ++i) {
-      leaf_value_[i] = MaybeRoundToZero(leaf_value_[i] * rate);
-      internal_value_[i] = MaybeRoundToZero(internal_value_[i] * rate);
+      leaf_value_[i] = MaybeRoundToZero(leaf_value_[i] * rate_new);
+      internal_value_[i] = MaybeRoundToZero(internal_value_[i] * rate_new);
       if (is_linear_) {
-        leaf_const_[i] = MaybeRoundToZero(leaf_const_[i] * rate);
+        leaf_const_[i] = MaybeRoundToZero(leaf_const_[i] * rate_new);
         for (size_t j = 0; j < leaf_coeff_[i].size(); ++j) {
-          leaf_coeff_[i][j] = MaybeRoundToZero(leaf_coeff_[i][j] * rate);
+          leaf_coeff_[i][j] = MaybeRoundToZero(leaf_coeff_[i][j] * rate_new);
         }
       }
     }
     leaf_value_[num_leaves_ - 1] =
-        MaybeRoundToZero(leaf_value_[num_leaves_ - 1] * rate);
+        MaybeRoundToZero(leaf_value_[num_leaves_ - 1] * rate_new);
     if (is_linear_) {
-      leaf_const_[num_leaves_ - 1] = MaybeRoundToZero(leaf_const_[num_leaves_ - 1] * rate);
+      leaf_const_[num_leaves_ - 1] = MaybeRoundToZero(leaf_const_[num_leaves_ - 1] * rate_new);
       for (size_t j = 0; j < leaf_coeff_[num_leaves_ - 1].size(); ++j) {
-        leaf_coeff_[num_leaves_ - 1][j] = MaybeRoundToZero(leaf_coeff_[num_leaves_ - 1][j] * rate);
+        leaf_coeff_[num_leaves_ - 1][j] = MaybeRoundToZero(leaf_coeff_[num_leaves_ - 1][j] * rate_new);
       }
     }
-    shrinkage_ *= rate;
+    shrinkage_ *= rate_new;
   }
+
+
+  virtual inline void Shrinkage(double rate, double gradient_bound) {
+
+    double  rate_new =  rate ;
+    double  score_max= 0 ;
+
+    for (int i = 0; i < num_leaves_; ++i) {
+      if( fabs( leaf_value_[i] ) > score_max )  score_max = fabs( leaf_value_[i] );
+    }
+
+    rate_new = gradient_bound / score_max;
+    if( rate_new > rate || gradient_bound<=0)  rate_new = rate;
+
+#pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static, 1024) if (num_leaves_ >= 2048)
+    for (int i = 0; i < num_leaves_ - 1; ++i) {
+      leaf_value_[i] = MaybeRoundToZero(leaf_value_[i] * rate_new);
+      internal_value_[i] = MaybeRoundToZero(internal_value_[i] * rate_new);
+      if (is_linear_) {
+        leaf_const_[i] = MaybeRoundToZero(leaf_const_[i] * rate_new);
+        for (size_t j = 0; j < leaf_coeff_[i].size(); ++j) {
+          leaf_coeff_[i][j] = MaybeRoundToZero(leaf_coeff_[i][j] * rate_new);
+        }
+      }
+    }
+    leaf_value_[num_leaves_ - 1] =
+        MaybeRoundToZero(leaf_value_[num_leaves_ - 1] * rate_new);
+    if (is_linear_) {
+      leaf_const_[num_leaves_ - 1] = MaybeRoundToZero(leaf_const_[num_leaves_ - 1] * rate_new);
+      for (size_t j = 0; j < leaf_coeff_[num_leaves_ - 1].size(); ++j) {
+        leaf_coeff_[num_leaves_ - 1][j] = MaybeRoundToZero(leaf_coeff_[num_leaves_ - 1][j] * rate_new);
+      }
+    }
+    shrinkage_ *= rate_new;
+  }
+
 
   inline double shrinkage() const { return shrinkage_; }
 
   virtual inline void AddBias(double val) {
 #pragma omp parallel for num_threads(OMP_NUM_THREADS()) schedule(static, 1024) if (num_leaves_ >= 2048)
-    for (int i = 0; i < num_leaves_ - 1; ++i) {
+    for (int i = 0; i < num_leaves_ -1; ++i) {
       leaf_value_[i] = MaybeRoundToZero(leaf_value_[i] + val);
       internal_value_[i] = MaybeRoundToZero(internal_value_[i] + val);
     }
@@ -728,4 +776,4 @@ inline int Tree::GetLeafByMap(const std::unordered_map<int, double>& feature_val
 
 }  // namespace LightGBM
 
-#endif   // LIGHTGBM_INCLUDE_LIGHTGBM_TREE_H_
+#endif   // LightGBM_TREE_H_

@@ -1445,7 +1445,11 @@ class HistogramPool {
         if (!config->feature_contri.empty()) {
           ref_feature_meta[i].penalty = config->feature_contri[real_fidx];
         } else {
-          ref_feature_meta[i].penalty = 1.0;
+          if ( i < config->canaritos )  {
+            ref_feature_meta[i].penalty = 1.01;
+          } else {
+            ref_feature_meta[i].penalty = 1.0;
+          }
         }
         ref_feature_meta[i].rand = Random(config->extra_seed + i);
       }

@@ -1,6 +1,6 @@
-Package: lightgbm
+Package: zlightgbm
 Type: Package
-Title: Light Gradient Boosting Machine
+Title: Zero Light Gradient Boosting Machine
 Version: ~~VERSION~~
 Date: ~~DATE~~
 Authors@R: c(
@@ -63,4 +63,4 @@ Imports:
     utils
 SystemRequirements:
     C++17
-RoxygenNote: 7.3.3
+RoxygenNote: 7.3.2

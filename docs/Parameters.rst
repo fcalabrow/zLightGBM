@@ -162,7 +162,7 @@ Core Parameters
 
    -  ranking application
 
-      -  ``lambdarank``, `lambdarank <https://proceedings.neurips.cc/paper/2006/hash/af44c4c56f385c43f2529f9b1b018f6a-Abstract.html>`__ objective. `label_gain <#label_gain>`__ can be used to set the gain (weight) of ``int`` label and all values in ``label`` must be smaller than number of elements in ``label_gain``
+      -  ``lambdarank``, `lambdarank <https://proceedings.neurips.cc/paper_files/paper/2006/file/af44c4c56f385c43f2529f9b1b018f6a-Paper.pdf>`__ objective. `label_gain <#label_gain>`__ can be used to set the gain (weight) of ``int`` label and all values in ``label`` must be smaller than number of elements in ``label_gain``
 
       -  ``rank_xendcg``, `XE_NDCG_MART <https://arxiv.org/abs/1911.09798>`__ ranking objective function, aliases: ``xendcg``, ``xe_ndcg``, ``xe_ndcg_mart``, ``xendcg_mart``
 
@@ -224,7 +224,21 @@ Core Parameters
 
    -  in ``dart``, it also affects on normalization weights of dropped trees
 
--  ``num_leaves`` :raw-html:`<a id="num_leaves" title="Permalink to this parameter" href="#num_leaves">&#x1F517;&#xFE0E;</a>`, default = ``31``, type = int, aliases: ``num_leaf``, ``max_leaves``, ``max_leaf``, ``max_leaf_nodes``, constraints: ``1 < num_leaves <= 131072``
+-  ``gradient_bound`` :raw-html:`<a id="gradient_bound" title="Permalink to this parameter" href="#gradient_bound">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, aliases: ``gradient_max``, constraints: ``gradient_bound >= 0.0``
+
+   -  absolute value of the max bound if > 0, no effect if ==0
+
+   -  learning_rate is adjusted
+
+-  ``num_leaves_initial`` :raw-html:`<a id="num_leaves_initial" title="Permalink to this parameter" href="#num_leaves_initial">&#x1F517;&#xFE0E;</a>`, default = ``131072``, type = int, aliases: ``num_leaves_initial``, constraints: ``1 < num_leaves_initial <= 131072``
+
+   -  max number of leaves in the first tree
+
+-  ``canaritos`` :raw-html:`<a id="canaritos" title="Permalink to this parameter" href="#canaritos">&#x1F517;&#xFE0E;</a>`, default = ``-1``, type = int, aliases: ``canarito``, ``qcanaritos``, ``canaries``, ``canary``, constraints: ``canaritos >= -1``
+
+   -  number of column canaritos at the beginning, no effect if ==-1
+
+-  ``num_leaves`` :raw-html:`<a id="num_leaves" title="Permalink to this parameter" href="#num_leaves">&#x1F517;&#xFE0E;</a>`, default = ``kDefaultNumLeaves``, type = int, aliases: ``num_leaf``, ``max_leaves``, ``max_leaf``, ``max_leaf_nodes``, constraints: ``1 < num_leaves <= 131072``
 
    -  max number of leaves in one tree
 
@@ -491,7 +505,7 @@ Learning Control Parameters
 
 -  ``linear_lambda`` :raw-html:`<a id="linear_lambda" title="Permalink to this parameter" href="#linear_lambda">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, constraints: ``linear_lambda >= 0.0``
 
-   -  linear tree regularization, corresponds to the parameter ``lambda`` in Eq. 3 of `Gradient Boosting with Piece-Wise Linear Regression Trees <https://arxiv.org/abs/1802.05640>`__
+   -  linear tree regularization, corresponds to the parameter ``lambda`` in Eq. 3 of `Gradient Boosting with Piece-Wise Linear Regression Trees <https://arxiv.org/pdf/1802.05640.pdf>`__
 
 -  ``min_gain_to_split`` :raw-html:`<a id="min_gain_to_split" title="Permalink to this parameter" href="#min_gain_to_split">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, aliases: ``min_split_gain``, constraints: ``min_gain_to_split >= 0.0``
 
@@ -845,7 +859,7 @@ Dataset Parameters
 
 -  ``enable_bundle`` :raw-html:`<a id="enable_bundle" title="Permalink to this parameter" href="#enable_bundle">&#x1F517;&#xFE0E;</a>`, default = ``true``, type = bool, aliases: ``is_enable_bundle``, ``bundle``
 
-   -  set this to ``false`` to disable Exclusive Feature Bundling (EFB), which is described in `LightGBM: A Highly Efficient Gradient Boosting Decision Tree <https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html>`__
+   -  set this to ``false`` to disable Exclusive Feature Bundling (EFB), which is described in `LightGBM: A Highly Efficient Gradient Boosting Decision Tree <https://papers.nips.cc/paper_files/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html>`__
 
    -  **Note**: disabling this may cause the slow training speed for sparse datasets
 
@@ -1192,7 +1206,7 @@ Objective Parameters
 
    -  used only in ``lambdarank`` application
 
-   -  controls the number of top-results to focus on during training, refer to "truncation level" in the Sec. 3 of `LambdaMART paper <https://www.microsoft.com/en-us/research/publication/from-ranknet-to-lambdarank-to-lambdamart-an-overview/>`__
+   -  controls the number of top-results to focus on during training, refer to "truncation level" in the Sec. 3 of `LambdaMART paper <https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf>`__
 
    -  this parameter is closely related to the desirable cutoff ``k`` in the metric **NDCG@k** that we aim at optimizing the ranker for. The optimal setting for this parameter is likely to be slightly higher than ``k`` (e.g., ``k + 3``) to include more pairs of documents to train on, but perhaps not too high to avoid deviating too much from the desired target metric **NDCG@k**
 
@@ -1261,13 +1275,11 @@ Metric Parameters
 
       -  ``average_precision``, `average precision score <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html>`__
 
-      -  ``r2``, `R-squared <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html>`__
-
       -  ``binary_logloss``, `log loss <https://en.wikipedia.org/wiki/Cross_entropy>`__, aliases: ``binary``
 
       -  ``binary_error``, for one sample: ``0`` for correct classification, ``1`` for error classification
 
-      -  ``auc_mu``, `AUC-mu <https://proceedings.mlr.press/v97/kleiman19a.html>`__
+      -  ``auc_mu``, `AUC-mu <http://proceedings.mlr.press/v97/kleiman19a/kleiman19a.pdf>`__
 
       -  ``multi_logloss``, log loss for multi-class classification, aliases: ``multiclass``, ``softmax``, ``multiclassova``, ``multiclass_ova``, ``ova``, ``ovr``
 

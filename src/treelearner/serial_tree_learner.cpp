@@ -10,13 +10,10 @@
 #include <LightGBM/utils/common.h>
 
 #include <algorithm>
-#include <memory>
 #include <queue>
 #include <set>
-#include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "cost_effective_gradient_boosting.hpp"
 
@@ -179,7 +176,7 @@ void SerialTreeLearner::ResetConfig(const Config* config) {
   constraints_.reset(LeafConstraintsBase::Create(config_, config_->num_leaves, train_data_->num_features()));
 }
 
-Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians, bool /*is_first_tree*/) {
+Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians, bool is_first_tree) {
   Common::FunctionTimer fun_timer("SerialTreeLearner::Train", global_timer);
   gradients_ = gradients;
   hessians_ = hessians;
@@ -199,8 +196,11 @@ Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians
   // some initial works before training
   BeforeTrain();
 
+  // int num_leaves_actual = ( is_first_tree ) ? config_->num_leaves : config_->num_leaves_initial;
+  int  num_leaves_actual = config_->num_leaves;
+  
   bool track_branch_features = !(config_->interaction_constraints_vector.empty());
-  auto tree = std::unique_ptr<Tree>(new Tree(config_->num_leaves, track_branch_features, false));
+  auto tree = std::unique_ptr<Tree>(new Tree(num_leaves_actual, track_branch_features, false));
   auto tree_ptr = tree.get();
   constraints_->ShareTreePointer(tree_ptr);
 
@@ -218,14 +218,44 @@ Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians
 
   int init_splits = ForceSplits(tree_ptr, &left_leaf, &right_leaf, &cur_depth);
 
-  for (int split = init_splits; split < config_->num_leaves - 1; ++split) {
+  for (int split = init_splits; split < num_leaves_actual - 1; ++split) {
     // some initial works before finding best split
     if (BeforeFindBestSplit(tree_ptr, left_leaf, right_leaf)) {
       // find best threshold for every feature
       FindBestSplits(tree_ptr);
     }
     // Get a leaf with max split gain
-    int best_leaf = static_cast<int>(ArrayArgs<SplitInfo>::ArgMax(best_split_per_leaf_));
+    // int best_leaf = static_cast<int>(ArrayArgs<SplitInfo>::ArgMax(best_split_per_leaf_));
+    
+    int qcanaritos = config_->canaritos; 
+       
+    int best_leaf = -1;
+    double  best_gain = -99999999.0;
+    int best_leaf_cana = -1;                                                                                         
+    double  best_gain_cana = -99999999.0;
+    for (size_t i = 0; i < best_split_per_leaf_.size();  i++) {
+        if (  best_split_per_leaf_[i].feature >= qcanaritos && best_split_per_leaf_[i].gain > best_gain) {
+          best_gain = best_split_per_leaf_[i].gain;
+          best_leaf = i;
+        }
+        if (  best_split_per_leaf_[i].feature < qcanaritos && best_split_per_leaf_[i].gain > best_gain_cana) {        
+          best_gain_cana = best_split_per_leaf_[i].gain;                                                               
+          best_leaf_cana = i;                                                                                         
+        }  
+      }
+
+   // Log::Warning( "best_leaf %d  %d  %f\n", best_leaf, best_split_per_leaf_[best_leaf].feature, best_split_per_leaf_[best_leaf].gain);
+ 
+   // only canaritos were present
+    if (best_leaf == -1 ) {
+      Log::Warning("Canaritos only ");
+      break;
+    }
+
+    // if( best_leaf_cana > -1 && best_split_per_leaf_[best_leaf].gain < best_split_per_leaf_[best_leaf_cana].gain ) {
+    //  break;
+    // }
+ 
     // Get split information for best leaf
     const SplitInfo& best_leaf_SplitInfo = best_split_per_leaf_[best_leaf];
     // cannot split, quit
@@ -233,6 +263,7 @@ Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians
       Log::Warning("No further splits with positive gain, best gain: %f", best_leaf_SplitInfo.gain);
       break;
     }
+  
     // split tree with best leaf
     Split(tree_ptr, best_leaf, &left_leaf, &right_leaf);
     cur_depth = std::max(cur_depth, tree->leaf_depth(left_leaf));
@@ -371,16 +402,12 @@ bool SerialTreeLearner::BeforeFindBestSplit(const Tree* tree, int left_leaf, int
     larger_leaf_histogram_array_ = nullptr;
   } else if (num_data_in_left_child < num_data_in_right_child) {
     // put parent(left) leaf's histograms into larger leaf's histograms
-    if (histogram_pool_.Get(left_leaf, &larger_leaf_histogram_array_)) {
-      parent_leaf_histogram_array_ = larger_leaf_histogram_array_;
-    }
+    if (histogram_pool_.Get(left_leaf, &larger_leaf_histogram_array_)) { parent_leaf_histogram_array_ = larger_leaf_histogram_array_; }
     histogram_pool_.Move(left_leaf, right_leaf);
     histogram_pool_.Get(left_leaf, &smaller_leaf_histogram_array_);
   } else {
     // put parent(left) leaf's histograms to larger leaf's histograms
-    if (histogram_pool_.Get(left_leaf, &larger_leaf_histogram_array_)) {
-      parent_leaf_histogram_array_ = larger_leaf_histogram_array_;
-    }
+    if (histogram_pool_.Get(left_leaf, &larger_leaf_histogram_array_)) { parent_leaf_histogram_array_ = larger_leaf_histogram_array_; }
     histogram_pool_.Get(right_leaf, &smaller_leaf_histogram_array_);
   }
   return true;
