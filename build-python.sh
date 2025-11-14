@@ -62,7 +62,7 @@
 
 set -e -u
 
-echo "[INFO] building lightgbm"
+echo "[INFO] building zlightgbm"
 
 # Default values of arguments
 INSTALL="false"
@@ -187,17 +187,17 @@ pip install --prefer-binary 'build>=0.10.0'
 create_isolated_source_dir() {
     rm -rf \
         ./lightgbm-python \
-        ./lightgbm \
+        ./zlightgbm \
         ./python-package/build \
         ./python-package/build_cpp \
         ./python-package/compile \
         ./python-package/dist \
-        ./python-package/lightgbm.egg-info
+        ./python-package/zlightgbm.egg-info
 
     cp -R ./python-package ./lightgbm-python
 
     cp LICENSE ./lightgbm-python/
-    cp VERSION.txt ./lightgbm-python/lightgbm/VERSION.txt
+    cp VERSION.txt ./lightgbm-python/zlightgbm/VERSION.txt
 
     cp -R ./cmake ./lightgbm-python
     cp CMakeLists.txt ./lightgbm-python
@@ -310,29 +310,29 @@ if test "${INSTALL}" = true; then
         echo 'requires = ["setuptools"]' >> ./pyproject.toml
         echo 'build-backend = "setuptools.build_meta"' >> ./pyproject.toml
         echo "" >> ./pyproject.toml
-        echo "recursive-include lightgbm *.dll *.dylib *.so" > ./MANIFEST.in
+        echo "recursive-include zlightgbm *.dll *.dylib *.so" > ./MANIFEST.in
         echo "" >> ./MANIFEST.in
-        mkdir -p ./lightgbm/lib
+        mkdir -p ./zlightgbm/lib
         if test -f ../lib_lightgbm.so; then
             echo "[INFO] found pre-compiled lib_lightgbm.so"
-            cp ../lib_lightgbm.so ./lightgbm/lib/lib_lightgbm.so
+            cp ../lib_lightgbm.so ./zlightgbm/lib/lib_lightgbm.so
         elif test -f ../lib_lightgbm.dylib; then
             echo "[INFO] found pre-compiled lib_lightgbm.dylib"
-            cp ../lib_lightgbm.dylib ./lightgbm/lib/lib_lightgbm.dylib
+            cp ../lib_lightgbm.dylib ./zlightgbm/lib/lib_lightgbm.dylib
         elif test -f ../lib_lightgbm.dll; then
             echo "[INFO] found pre-compiled lib_lightgbm.dll"
-            cp ../lib_lightgbm.dll ./lightgbm/lib/lib_lightgbm.dll
+            cp ../lib_lightgbm.dll ./zlightgbm/lib/lib_lightgbm.dll
         elif test -f ../Release/lib_lightgbm.dll; then
             echo "[INFO] found pre-compiled Release/lib_lightgbm.dll"
-            cp ../Release/lib_lightgbm.dll ./lightgbm/lib/lib_lightgbm.dll
+            cp ../Release/lib_lightgbm.dll ./zlightgbm/lib/lib_lightgbm.dll
         elif test -f ../windows/x64/DLL/lib_lightgbm.dll; then
             echo "[INFO] found pre-compiled windows/x64/DLL/lib_lightgbm.dll"
-            cp ../windows/x64/DLL/lib_lightgbm.dll ./lightgbm/lib/lib_lightgbm.dll
-            cp ../windows/x64/DLL/lib_lightgbm.lib ./lightgbm/lib/lib_lightgbm.lib
+            cp ../windows/x64/DLL/lib_lightgbm.dll ./zlightgbm/lib/lib_lightgbm.dll
+            cp ../windows/x64/DLL/lib_lightgbm.lib ./zlightgbm/lib/lib_lightgbm.lib
         elif test -f ../windows/x64/Debug_DLL/lib_lightgbm.dll; then
             echo "[INFO] found pre-compiled windows/x64/Debug_DLL/lib_lightgbm.dll"
-            cp ../windows/x64/Debug_DLL/lib_lightgbm.dll ./lightgbm/lib/lib_lightgbm.dll
-            cp ../windows/x64/Debug_DLL/lib_lightgbm.lib ./lightgbm/lib/lib_lightgbm.lib
+            cp ../windows/x64/Debug_DLL/lib_lightgbm.dll ./zlightgbm/lib/lib_lightgbm.dll
+            cp ../windows/x64/Debug_DLL/lib_lightgbm.lib ./zlightgbm/lib/lib_lightgbm.lib
         else
             echo "[ERROR] cannot find pre-compiled library. Aborting"
             exit 1
@@ -365,12 +365,12 @@ if test "${BUILD_WHEEL}" = true; then
 fi
 
 if test "${INSTALL}" = true; then
-    echo "[INFO] --- installing lightgbm ---"
+    echo "[INFO] --- installing zlightgbm ---"
     cd ../dist
     if test "${BUILD_WHEEL}" = true; then
-        PACKAGE_NAME="$(echo lightgbm*.whl)"
+        PACKAGE_NAME="$(echo zlightgbm*.whl)"
     else
-        PACKAGE_NAME="$(echo lightgbm*.tar.gz)"
+        PACKAGE_NAME="$(echo zlightgbm*.tar.gz)"
     fi
     # ref for use of '--find-links': https://stackoverflow.com/a/52481267/3986677
     # shellcheck disable=SC2086
