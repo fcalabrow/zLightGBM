@@ -15,7 +15,7 @@ zLightGBM es un fork experimental de LightGBM que se instala como un paquete sep
 #### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/fcalabrow/zLightGBM.git
+git clone --recursive https://github.com/fcalabrow/zLightGBM.git
 cd zLightGBM
 ```
 
