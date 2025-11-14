@@ -180,7 +180,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-pip install --prefer-binary 'build>=0.10.0'
+python -m pip install --prefer-binary 'build>=0.10.0'
 
 # create a new directory that just contains the files needed
 # to build the Python-package
@@ -374,7 +374,7 @@ if test "${INSTALL}" = true; then
     fi
     # ref for use of '--find-links': https://stackoverflow.com/a/52481267/3986677
     # shellcheck disable=SC2086
-    pip install \
+    python -m pip install \
         ${PIP_INSTALL_ARGS} \
         --force-reinstall \
         --no-cache-dir \
