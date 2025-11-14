@@ -62,6 +62,13 @@
 
 set -e -u
 
+# Use Python from virtual environment if available, otherwise use system Python
+if [ -n "${VIRTUAL_ENV:-}" ] && [ -f "${VIRTUAL_ENV}/bin/python" ]; then
+    PYTHON="${VIRTUAL_ENV}/bin/python"
+else
+    PYTHON="python"
+fi
+
 echo "[INFO] building zlightgbm"
 
 # Default values of arguments
@@ -180,7 +187,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-python -m pip install --prefer-binary 'build>=0.10.0'
+"${PYTHON}" -m pip install --prefer-binary 'build>=0.10.0'
 
 # create a new directory that just contains the files needed
 # to build the Python-package
@@ -351,7 +358,7 @@ if test "${BUILD_SDIST}" = true; then
     # note that empty echo string leads to that xargs doesn't run the command
     # in some implementations of xargs
     # ref: https://stackoverflow.com/a/8296746
-    echo "--sdist --outdir ../dist ${BUILD_ARGS} ." | xargs python -m build
+    echo "--sdist --outdir ../dist ${BUILD_ARGS} ." | xargs "${PYTHON}" -m build
 fi
 
 if test "${BUILD_WHEEL}" = true; then
@@ -361,7 +368,7 @@ if test "${BUILD_WHEEL}" = true; then
     # note that empty echo string leads to that xargs doesn't run the command
     # in some implementations of xargs
     # ref: https://stackoverflow.com/a/8296746
-    echo "--wheel --outdir ../dist ${BUILD_ARGS} ." | xargs python -m build
+    echo "--wheel --outdir ../dist ${BUILD_ARGS} ." | xargs "${PYTHON}" -m build
 fi
 
 if test "${INSTALL}" = true; then
@@ -374,7 +381,7 @@ if test "${INSTALL}" = true; then
     fi
     # ref for use of '--find-links': https://stackoverflow.com/a/52481267/3986677
     # shellcheck disable=SC2086
-    python -m pip install \
+    "${PYTHON}" -m pip install \
         ${PIP_INSTALL_ARGS} \
         --force-reinstall \
         --no-cache-dir \
